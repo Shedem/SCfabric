@@ -129,7 +129,7 @@
   <ItemGroup>
     <ClCompile Include="Base.cpp" />
     <ClCompile Include="Furniture.cpp" />
-    <ClCompile Include="keeper.cpp" />
+    <ClCompile Include="Keeper.cpp" />
     <ClCompile Include="Machine.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Worker.cpp" />
@@ -137,7 +137,7 @@
   <ItemGroup>
     <ClInclude Include="Base.h" />
     <ClInclude Include="Furniture.h" />
-    <ClInclude Include="keeper.h" />
+    <ClInclude Include="Keeper.h" />
     <ClInclude Include="Machine.h" />
     <ClInclude Include="Worker.h" />
   </ItemGroup>

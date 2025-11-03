@@ -18,7 +18,7 @@
     <ClCompile Include="main.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="keeper.cpp">
+    <ClCompile Include="Keeper.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
     <ClCompile Include="Base.cpp">
@@ -35,7 +35,7 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="keeper.h">
+    <ClInclude Include="Keeper.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
     <ClInclude Include="Base.h">
