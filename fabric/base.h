@@ -1,8 +1,7 @@
 #pragma once 
-#include <iostream> // Для вывода в консоль
-#include <fstream>  // Для файловых потоков (понадобится для save/load)
+#include <iostream> 
+#include <fstream>  
 
-// Используем стандартное пространство имен для удобства
 using namespace std;
 
 class Base {

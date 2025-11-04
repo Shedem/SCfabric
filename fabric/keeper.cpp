@@ -56,9 +56,7 @@ void Keeper::add(Base* newItem) {
 
 void Keeper::remove(int index) {
     if (index < 0 || index >= size) {
-        
-        cout << "ERROR: Index out of range for removal." << endl;
-        return;
+        throw IndexOutOfRangeException(index, size - 1);
     }
 
     // 1. Удаляем сам объект
@@ -88,8 +86,7 @@ void Keeper::showAll() {
 
 void Keeper::editItem(int index) {
     if (index < 0 || index >= size) {
-        cout << "ERROR: Index out of range for editing." << endl;
-        return;
+        throw IndexOutOfRangeException(index, size - 1);
     }
    
     items[index]->edit();
@@ -98,9 +95,7 @@ void Keeper::editItem(int index) {
 void Keeper::saveToFile(const char* filename) {
     ofstream fout(filename, ios::binary | ios::trunc);
     if (!fout.is_open()) {
-        
-        cout << "ERROR: Could not open file for saving." << endl;
-        return;
+        throw FileOpenException(filename);
     }
 
     fout.write(reinterpret_cast<const char*>(&size), sizeof(size));
@@ -131,9 +126,7 @@ void Keeper::saveToFile(const char* filename) {
 void Keeper::loadFromFile(const char* filename) {
     ifstream fin(filename, ios::binary);
     if (!fin.is_open()) {
-        
-        cout << "ERROR: Could not open file for loading." << endl;
-        return;
+        throw FileOpenException(filename);
     }
 
     if (items) {
