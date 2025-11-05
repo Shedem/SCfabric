@@ -4,6 +4,7 @@
 #include <cstring>
 #include <string>   
 #include <stdexcept> 
+#include <iomanip>
 
 using namespace std;
 
@@ -134,84 +135,67 @@ void Worker::show() {
 }
 
 void Worker::save(ofstream& fout) {
-    // 1. Сохраняем FIO
-    int len_fio = fio ? strlen(fio) : 0;
-    fout.write(reinterpret_cast<const char*>(&len_fio), sizeof(len_fio));
-    if (len_fio > 0) fout.write(fio, len_fio);
+    fout << 2 << endl; // Тег типа: 2 (Worker)
 
-    // 2. Сохраняем Должность (position)
-    int len_pos = position ? strlen(position) : 0;
-    fout.write(reinterpret_cast<const char*>(&len_pos), sizeof(len_pos));
-    if (len_pos > 0) fout.write(position, len_pos);
-
-    // 3. Сохраняем Зарплату (salary)
-    fout.write(reinterpret_cast<const char*>(&salary), sizeof(salary));
-
-    // 4. Сохраняем Адрес (address)
-    int len_addr = address ? strlen(address) : 0;
-    fout.write(reinterpret_cast<const char*>(&len_addr), sizeof(len_addr));
-    if (len_addr > 0) fout.write(address, len_addr);
-
-    // 5. Сохраняем Телефон (phone)
-    int len_phone = phone ? strlen(phone) : 0;
-    fout.write(reinterpret_cast<const char*>(&len_phone), sizeof(len_phone));
-    if (len_phone > 0) fout.write(phone, len_phone);
+    fout << (fio ? fio : "N/A") << endl;
+    fout << (position ? position : "N/A") << endl;
+    fout << salary << endl;
+    fout << (address ? address : "N/A") << endl;
+    fout << (phone ? phone : "N/A") << endl;
 }
 
 void Worker::load(ifstream& fin) {
-    int len = 0;
+    string tempStr;
+    double tempDouble;
 
-    // Вспомогательная функция для загрузки char*
-    auto load_char_ptr = [&](char*& ptr) {
-        fin.read(reinterpret_cast<char*>(&len), sizeof(len));
-        if (len > 0) {
-            delete[] ptr;
-            ptr = new char[len + 1];
-            fin.read(ptr, len);
-            ptr[len] = '\0';
-        }
-        else {
-            delete[] ptr;
-            ptr = nullptr;
-        }
-        };
+    // 1. FIO
+    if (!getline(fin, tempStr)) return;
+    setFio(tempStr.c_str());
 
-    // 1. Загружаем FIO
-    load_char_ptr(fio);
+    // 2. Position
+    if (!getline(fin, tempStr)) return;
+    setPosition(tempStr.c_str());
 
-    // 2. Загружаем Должность (position)
-    load_char_ptr(position);
+    // 3. Salary (number)
+    if (!(fin >> tempDouble)) return;
+    salary = tempDouble;
+    fin.ignore(numeric_limits<streamsize>::max(), '\n'); 
 
-    // 3. Загружаем Зарплату (salary)
-    fin.read(reinterpret_cast<char*>(&salary), sizeof(salary));
+    // 4. Address
+    if (!getline(fin, tempStr)) return;
+    setAddress(tempStr.c_str());
 
-    // 4. Загружаем Адрес (address)
-    load_char_ptr(address);
-
-    // 5. Загружаем Телефон (phone)
-    load_char_ptr(phone);
+    // 5. Phone
+    if (!getline(fin, tempStr)) return;
+    setPhone(tempStr.c_str());
 }
 
 void Worker::edit() {
     cout << "\n--- Редактирование Работника ---" << endl;
     char buffer[256];
     double new_salary;
+    const char* SKIP_SYMBOL = "-"; // Символ пропуска
 
     // 1. FIO
-    cout << "Текущее ФИО: " << (fio ? fio : "N/A") << ". Введите новое: ";
-    cin.ignore();
+    cout << "Текущее ФИО: " << (fio ? fio : "N/A") << ". Введите новое (или '-' для пропуска): ";
+    cin.ignore(numeric_limits<streamsize>::max(), '\n');
     cin.getline(buffer, 256);
-    if (strlen(buffer) > 0) setFio(buffer);
+    if (strcmp(buffer, SKIP_SYMBOL) != 0 && strlen(buffer) > 0) {
+        setFio(buffer);
+    }
 
     // 2. Должность
-    cout << "Текущая должность: " << (position ? position : "N/A") << ". Введите новую: ";
+    cout << "Текущая должность: " << (position ? position : "N/A") << ". Введите новую (или '-' для пропуска): ";
     cin.getline(buffer, 256);
-    if (strlen(buffer) > 0) setPosition(buffer);
+    if (strcmp(buffer, SKIP_SYMBOL) != 0 && strlen(buffer) > 0) {
+        setPosition(buffer);
+    }
 
-    // 3. Зарплата (требует обработки ошибок/ввода)
-    cout << "Текущая зарплата: " << salary << ". Введите новую (число): ";
+    // 3. Зарплата (Числовой ввод)
+    cout << "Текущая зарплата: " << fixed << setprecision(2) << salary << ". Введите новую (число, или '-' для пропуска): ";
+    cout.unsetf(ios_base::floatfield);
     cin.getline(buffer, 256);
-    if (strlen(buffer) > 0) {
+    if (strcmp(buffer, SKIP_SYMBOL) != 0 && strlen(buffer) > 0) {
         try {
             new_salary = std::stod(std::string(buffer));
             setSalary(new_salary);
@@ -222,14 +206,18 @@ void Worker::edit() {
     }
 
     // 4. Адрес
-    cout << "Текущий адрес: " << (address ? address : "N/A") << ". Введите новый: ";
+    cout << "Текущий адрес: " << (address ? address : "N/A") << ". Введите новый (или '-' для пропуска): ";
     cin.getline(buffer, 256);
-    if (strlen(buffer) > 0) setAddress(buffer);
+    if (strcmp(buffer, SKIP_SYMBOL) != 0 && strlen(buffer) > 0) {
+        setAddress(buffer);
+    }
 
     // 5. Телефон
-    cout << "Текущий телефон: " << (phone ? phone : "N/A") << ". Введите новый: ";
+    cout << "Текущий телефон: " << (phone ? phone : "N/A") << ". Введите новый (или '-' для пропуска): ";
     cin.getline(buffer, 256);
-    if (strlen(buffer) > 0) setPhone(buffer);
+    if (strcmp(buffer, SKIP_SYMBOL) != 0 && strlen(buffer) > 0) {
+        setPhone(buffer);
+    }
 
     cout << "Редактирование Работника завершено." << endl;
 }

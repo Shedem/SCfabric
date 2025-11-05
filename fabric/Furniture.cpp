@@ -129,104 +129,119 @@ void Furniture::show() {
 }
 
 void Furniture::save(ofstream& fout) {
-    // 1. Сохраняем Тип (type)
-    int len_type = type ? strlen(type) : 0;
-    fout.write(reinterpret_cast<const char*>(&len_type), sizeof(len_type));
-    if (len_type > 0) fout.write(type, len_type);
+    fout << 1 << endl; // Тег типа: 1 (Furniture)
 
-    // 2. Сохраняем Габариты (примитивные типы)
-    fout.write(reinterpret_cast<const char*>(&height), sizeof(height));
-    fout.write(reinterpret_cast<const char*>(&width), sizeof(width));
-    fout.write(reinterpret_cast<const char*>(&depth), sizeof(depth));
-
-    // 3. Сохраняем Цвет (color)
-    int len_color = color ? strlen(color) : 0;
-    fout.write(reinterpret_cast<const char*>(&len_color), sizeof(len_color));
-    if (len_color > 0) fout.write(color, len_color);
-
-    // 4. Сохраняем Материал (material)
-    int len_mat = material ? strlen(material) : 0;
-    fout.write(reinterpret_cast<const char*>(&len_mat), sizeof(len_mat));
-    if (len_mat > 0) fout.write(material, len_mat);
-
-    // 5. Сохраняем Стоимость
-    fout.write(reinterpret_cast<const char*>(&cost), sizeof(cost));
+    fout << (type ? type : "N/A") << endl;
+    fout << height << endl;
+    fout << width << endl;
+    fout << depth << endl;
+    fout << (color ? color : "N/A") << endl;
+    fout << (material ? material : "N/A") << endl;
+    fout << cost << endl;
 }
 
 void Furniture::load(ifstream& fin) {
-    int len = 0;
+    string tempStr;
+    double tempDouble;
 
-    // Вспомогательная функция для загрузки char*
-    auto load_char_ptr = [&](char*& ptr) {
-        fin.read(reinterpret_cast<char*>(&len), sizeof(len));
-        if (len > 0) {
-            delete[] ptr;
-            ptr = new char[len + 1];
-            fin.read(ptr, len);
-            ptr[len] = '\0';
-        }
-        else {
-            delete[] ptr;
-            ptr = nullptr;
-        }
-        };
+    // 1. Тип (type)
+    if (!getline(fin, tempStr)) return;
+    setType(tempStr.c_str());
 
-    // 1. Загружаем Тип
-    load_char_ptr(type);
+    // 2. Габариты (numbers)
+    if (!(fin >> tempDouble)) return;
+    height = tempDouble;
+    if (!(fin >> tempDouble)) return;
+    width = tempDouble;
+    if (!(fin >> tempDouble)) return;
+    depth = tempDouble;
+    fin.ignore(numeric_limits<streamsize>::max(), '\n');
 
-    // 2. Загружаем Габариты
-    fin.read(reinterpret_cast<char*>(&height), sizeof(height));
-    fin.read(reinterpret_cast<char*>(&width), sizeof(width));
-    fin.read(reinterpret_cast<char*>(&depth), sizeof(depth));
+    // 3. Цвет (color)
+    if (!getline(fin, tempStr)) return;
+    setColor(tempStr.c_str());
 
-    // 3. Загружаем Цвет
-    load_char_ptr(color);
+    // 4. Материал (material)
+    if (!getline(fin, tempStr)) return;
+    setMaterial(tempStr.c_str());
 
-    // 4. Загружаем Материал
-    load_char_ptr(material);
-
-    // 5. Загружаем Стоимость
-    fin.read(reinterpret_cast<char*>(&cost), sizeof(cost));
+    // 5. Стоимость (number)
+    if (!(fin >> tempDouble)) return;
+    cost = tempDouble;
+    fin.ignore(numeric_limits<streamsize>::max(), '\n'); 
 }
 
 void Furniture::edit() {
     cout << "\n--- Редактирование Мебели ---" << endl;
     char buffer[256];
     double new_value;
+    const char* SKIP_SYMBOL = "-"; // Символ пропуска
 
     // 1. Тип
-    cout << "Текущий тип: " << (type ? type : "N/A") << ". Введите новый: ";
-    cin.ignore();
+    cout << "Текущий тип: " << (type ? type : "N/A") << ". Введите новый (или '-' для пропуска): ";
+    cin.ignore(numeric_limits<streamsize>::max(), '\n');
     cin.getline(buffer, 256);
-    if (strlen(buffer) > 0) setType(buffer);
+    // Проверка на символ пропуска и непустой ввод
+    if (strcmp(buffer, SKIP_SYMBOL) != 0 && strlen(buffer) > 0) {
+        setType(buffer);
+    }
 
-    // 2. Габариты 
-    cout << "Текущая высота: " << height << ". Введите новую (число): ";
+    // 2. Габариты (Высота)
+    cout << "Текущая высота: " << height << ". Введите новую (число, или '-' для пропуска): ";
     cin.getline(buffer, 256);
-    if (strlen(buffer) > 0) {
+    if (strcmp(buffer, SKIP_SYMBOL) != 0 && strlen(buffer) > 0) {
         try {
             new_value = std::stod(buffer);
-            setDimensions(new_value, width, depth); // меняем только высоту
+            height = new_value;
         }
         catch (...) {
             cout << "Ошибка ввода. Высота не изменена." << endl;
         }
     }
+   
+    // Ширина
+    cout << "Текущая ширина: " << width << ". Введите новую (число, или '-' для пропуска): ";
+    cin.getline(buffer, 256);
+    if (strcmp(buffer, SKIP_SYMBOL) != 0 && strlen(buffer) > 0) {
+        try {
+            new_value = std::stod(buffer);
+            width = new_value;
+        }
+        catch (...) {
+            cout << "Ошибка ввода. Ширина не изменена." << endl;
+        }
+    }
+    // Глубина
+    cout << "Текущая глубина: " << depth << ". Введите новую (число, или '-' для пропуска): ";
+    cin.getline(buffer, 256);
+    if (strcmp(buffer, SKIP_SYMBOL) != 0 && strlen(buffer) > 0) {
+        try {
+            new_value = std::stod(buffer);
+            depth = new_value;
+        }
+        catch (...) {
+            cout << "Ошибка ввода. Глубина не изменена." << endl;
+        }
+    }
 
     // 3. Цвет
-    cout << "Текущий цвет: " << (color ? color : "N/A") << ". Введите новый: ";
+    cout << "Текущий цвет: " << (color ? color : "N/A") << ". Введите новый (или '-' для пропуска): ";
     cin.getline(buffer, 256);
-    if (strlen(buffer) > 0) setColor(buffer);
+    if (strcmp(buffer, SKIP_SYMBOL) != 0 && strlen(buffer) > 0) {
+        setColor(buffer);
+    }
 
     // 4. Материал
-    cout << "Текущий материал: " << (material ? material : "N/A") << ". Введите новый: ";
+    cout << "Текущий материал: " << (material ? material : "N/A") << ". Введите новый (или '-' для пропуска): ";
     cin.getline(buffer, 256);
-    if (strlen(buffer) > 0) setMaterial(buffer);
+    if (strcmp(buffer, SKIP_SYMBOL) != 0 && strlen(buffer) > 0) {
+        setMaterial(buffer);
+    }
 
     // 5. Стоимость
-    cout << "Текущая стоимость: " << cost << ". Введите новую (число): ";
+    cout << "Текущая стоимость: " << cost << ". Введите новую (число, или '-' для пропуска): ";
     cin.getline(buffer, 256);
-    if (strlen(buffer) > 0) {
+    if (strcmp(buffer, SKIP_SYMBOL) != 0 && strlen(buffer) > 0) {
         try {
             new_value = std::stod(buffer);
             setCost(new_value);

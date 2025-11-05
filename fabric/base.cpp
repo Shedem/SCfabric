@@ -1,6 +1,5 @@
 #include "Base.h"
 
-// Реализация конструктора
 Base::Base() {
     
     cout << "Base constructor called" << endl;

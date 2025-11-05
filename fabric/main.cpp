@@ -89,7 +89,7 @@ int main() {
     SetConsoleCP(1251);
     SetConsoleOutputCP(1251);
     // Имя файла для сохранения
-    const char* filename = "factory_data.bin";
+    const char* filename = "factory_data.txt";
     // Создаем единственный объект-контейнер
     Keeper factoryKeeper;
     int choice = -1;
@@ -97,7 +97,7 @@ int main() {
     // Главный цикл программы
     while (choice != 0) {
         cout << "\n=======================================" << endl;
-        cout << "  СИСТЕМА УПРАВЛЕНИЯ ФАБРИКОЙ (Вариант 6)" << endl;
+        cout << "      СИСТЕМА УПРАВЛЕНИЯ ФАБРИКОЙ" << endl;
         cout << "=======================================" << endl;
         cout << "1. Добавить новый элемент" << endl;
         cout << "2. Удалить элемент по индексу" << endl;

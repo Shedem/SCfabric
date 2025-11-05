@@ -2,6 +2,8 @@
 #include <iostream>
 #include <fstream>
 #include <cstring>
+#include <iomanip>
+#include <string>
 
 using namespace std;
 
@@ -102,88 +104,51 @@ void Machine::show() {
 }
 
 void Machine::save(ofstream& fout) {
-    // 1. Сохраняем Марку (make)
-    int len_make = make ? strlen(make) : 0;
-    fout.write(reinterpret_cast<const char*>(&len_make), sizeof(len_make));
-    if (len_make > 0) fout.write(make, len_make);
+    fout << 3 << endl; // Тег типа: 3 (Machine)
 
-    // 2. Сохраняем Модель (model)
-    int len_model = model ? strlen(model) : 0;
-    fout.write(reinterpret_cast<const char*>(&len_model), sizeof(len_model));
-    if (len_model > 0) fout.write(model, len_model);
-
-    // 3. Сохраняем Гос. номер (licensePlate)
-    int len_lp = licensePlate ? strlen(licensePlate) : 0;
-    fout.write(reinterpret_cast<const char*>(&len_lp), sizeof(len_lp));
-    if (len_lp > 0) fout.write(licensePlate, len_lp);
+    fout << (make ? make : "N/A") << endl;
+    fout << (model ? model : "N/A") << endl;
+    fout << (licensePlate ? licensePlate : "N/A") << endl;
 }
 
 void Machine::load(ifstream& fin) {
-    int len = 0;
+    string tempStr;
 
-    // 1. Загружаем Марку (make)
-    fin.read(reinterpret_cast<char*>(&len), sizeof(len));
-    if (len > 0) {
-        delete[] make;
-        make = new char[len + 1];
-        fin.read(make, len);
-        make[len] = '\0';
-    }
-    else {
-        delete[] make;
-        make = nullptr;
-    }
+    if (!getline(fin, tempStr)) return;
+    setMake(tempStr.c_str());
 
-    // 2. Загружаем Модель (model)
-    fin.read(reinterpret_cast<char*>(&len), sizeof(len));
-    if (len > 0) {
-        delete[] model;
-        model = new char[len + 1];
-        fin.read(model, len);
-        model[len] = '\0';
-    }
-    else {
-        delete[] model;
-        model = nullptr;
-    }
+    if (!getline(fin, tempStr)) return;
+    setModel(tempStr.c_str());
 
-    // 3. Загружаем Гос. номер (licensePlate)
-    fin.read(reinterpret_cast<char*>(&len), sizeof(len));
-    if (len > 0) {
-        delete[] licensePlate;
-        licensePlate = new char[len + 1];
-        fin.read(licensePlate, len);
-        licensePlate[len] = '\0';
-    }
-    else {
-        delete[] licensePlate;
-        licensePlate = nullptr;
-    }
+    if (!getline(fin, tempStr)) return;
+    setLicensePlate(tempStr.c_str());
 }
 
 void Machine::edit() {
     cout << "\n--- Редактирование Машины ---" << endl;
     char buffer[256];
+    const char* SKIP_SYMBOL = "-";
+
 
     // 1. Редактирование Марки
-    cout << "Текущая марка: " << (make ? make : "N/A") << ". Введите новую: ";
-    cin.ignore();
+    cout << "Текущая марка: " << (make ? make : "N/A") << ". Введите новую (или '-' для пропуска): ";
+    cin.ignore(numeric_limits<streamsize>::max(), '\n');
     cin.getline(buffer, 256);
-    if (strlen(buffer) > 0) {
+    if (strcmp(buffer, SKIP_SYMBOL) !=0 && strlen(buffer) > 0) {
         setMake(buffer);
     }
 
     // 2. Редактирование Модели
-    cout << "Текущая модель: " << (model ? model : "N/A") << ". Введите новую: ";
+    cout << "Текущая модель: " << (model ? model : "N/A") << ". Введите новую (или '-' для пропуска): ";
     cin.getline(buffer, 256);
-    if (strlen(buffer) > 0) {
+    if (strcmp(buffer, SKIP_SYMBOL) != 0 && strlen(buffer) > 0) {
         setModel(buffer);
     }
 
     // 3. Редактирование Гос. номера
-    cout << "Текущий Гос. номер: " << (licensePlate ? licensePlate : "N/A") << ". Введите новый: ";
+    cout << "Текущий Гос. номер: " << (licensePlate ? licensePlate : "N/A") << ". Введите новый (или '-' для пропуска): ";
     cin.getline(buffer, 256);
-    if (strlen(buffer) > 0) {
+    if (strcmp(buffer, SKIP_SYMBOL) != 0 && strlen(buffer) > 0) {
         setLicensePlate(buffer);
     }
 

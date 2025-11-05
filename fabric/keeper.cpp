@@ -1,9 +1,9 @@
 #include "Keeper.h"
-#include "Furniture.h" // Нужны для загрузки
-#include "Worker.h"    // Нужны для загрузки
-#include "Machine.h"   // Нужны для загрузки
+#include "Furniture.h" 
+#include "Worker.h"    
+#include "Machine.h"   
 #include <iostream>
-#include <algorithm> // для std::copy, хотя можно и без него
+#include <algorithm> 
 #include <cstring>
 #include <stdexcept>
 
@@ -93,88 +93,80 @@ void Keeper::editItem(int index) {
 }
 
 void Keeper::saveToFile(const char* filename) {
-    ofstream fout(filename, ios::binary | ios::trunc);
+    
+    ofstream fout(filename, ios::out | ios::trunc); 
     if (!fout.is_open()) {
         throw FileOpenException(filename);
     }
 
-    fout.write(reinterpret_cast<const char*>(&size), sizeof(size));
+    fout << size << endl; // Запись количества элементов
 
     for (int i = 0; i < size; ++i) {
-        
-        int typeTag = 0;
-        if (dynamic_cast<Furniture*>(items[i])) {
-            typeTag = 1;
-        }
-        else if (dynamic_cast<Worker*>(items[i])) {
-            typeTag = 2;
-        }
-        else if (dynamic_cast<Machine*>(items[i])) {
-            typeTag = 3;
-        }
-
-        fout.write(reinterpret_cast<const char*>(&typeTag), sizeof(typeTag));
-
+        // Виртуальный вызов save(), который записывает тег и данные
         items[i]->save(fout);
     }
 
     fout.close();
-    cout << "Data saved successfully to " << filename << endl;
+    cout << "Данные успешно сохранены в файл: " << filename << endl;
 }
 
 
 void Keeper::loadFromFile(const char* filename) {
-    ifstream fin(filename, ios::binary);
+    
+    ifstream fin(filename, ios::in);
     if (!fin.is_open()) {
         throw FileOpenException(filename);
     }
 
-    if (items) {
-        for (int i = 0; i < size; ++i) {
-            delete items[i];
-        }
-        delete[] items;
+    // 1. Очистка старых данных
+    for (int i = 0; i < size; ++i) {
+        delete items[i];
     }
     size = 0;
-    capacity = 10;
-    items = new Base * [capacity];
 
-    int itemsToLoad = 0;
-    fin.read(reinterpret_cast<char*>(&itemsToLoad), sizeof(itemsToLoad));
+    // 2. Чтение общего количества
+    int newSize;
+    if (!(fin >> newSize)) {
+        cout << "ОШИБКА: Не удалось прочитать количество элементов." << endl;
+        return;
+    }
+    fin.ignore(numeric_limits<streamsize>::max(), '\n'); 
 
-    for (int i = 0; i < itemsToLoad; ++i) {
-        
-        if (size == capacity) {
-            resize(capacity * 2);
-        }
+    if (newSize > capacity) {
+        resize(newSize);
+    }
 
-        int typeTag = 0;
-        fin.read(reinterpret_cast<char*>(&typeTag), sizeof(typeTag));
+    // 3. Цикл загрузки элементов
+    for (int i = 0; i < newSize; ++i) {
+        int typeTag;
+        // Читаем тег типа
+        if (!(fin >> typeTag)) break;
+        fin.ignore(numeric_limits<streamsize>::max(), '\n'); 
 
         Base* newItem = nullptr;
-        
+
+        // Динамическое создание пустого объекта
         switch (typeTag) {
-        case 1:
-            newItem = new Furniture();
-            break;
-        case 2:
-            newItem = new Worker();
-            break;
-        case 3:
-            newItem = new Machine();
-            break;
-        default:
-            cout << "ERROR: Unknown type tag encountered. Aborting load." << endl;
-            
-            fin.close();
-            return;
+        case 1: newItem = new Furniture(); break;
+        case 2: newItem = new Worker(); break;
+        case 3: newItem = new Machine(); break;
+        default: continue;
         }
 
-        newItem->load(fin);
+        if (newItem) {
+            
+            newItem->load(fin);
 
-        items[size++] = newItem;
+            // Если массив не переполнен
+            if (size < capacity) {
+                items[size++] = newItem;
+            }
+            else {
+                delete newItem; // Защита от переполнения
+            }
+        }
     }
 
     fin.close();
-    cout << "Data loaded successfully. Total items: " << size << endl;
+    cout << "Данные успешно загружены из файла: " << filename << ". Всего элементов: " << size << endl;
 }
